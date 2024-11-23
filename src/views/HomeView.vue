@@ -6,17 +6,32 @@
           <div class="">
             <div class="font-bold text-[18px]">Ảnh đã xử lý</div>
             <div class="mt-5">
-              <img src="../assets/img.jpg" alt="" class="mx-auto w-[500px]" />
+              <img :src="path1" alt="" class="mx-auto w-[500px]" />
               <div class="mt-8 flex items-center gap-5 justify-center">
                 <img
-                  src="../assets/img.jpg"
+                  @click="swapPath(2)"
+                  :src="path2"
                   alt=""
                   class="max-w-[80px] border-2 border-black cursor-pointer"
                 />
-                <img src="../assets/img.jpg" alt="" class="max-w-[80px]" />
+                <img
+                  :src="path3"
+                  @click="swapPath(3)"
+                  alt=""
+                  class="max-w-[80px]"
+                />
               </div>
             </div>
-            <button class="mt-8 bg-[#7F56D9] text-white px-7 py-3 rounded-lg">
+            <input
+              type="file"
+              @change="handleFileChange"
+              class="hidden"
+              ref="fileInput"
+            />
+            <button
+              @click="triggerFileInput"
+              class="mt-8 bg-[#7F56D9] text-white px-7 py-3 rounded-lg"
+            >
               Tải file
             </button>
           </div>
@@ -74,7 +89,16 @@
       <div v-if="!hasFile" class="mx-auto mt-24 text-center">
         <div class="font-bold text-[20px]">Hệ thống trích xuất dữ liệu OCR</div>
         <span class="block mt-6">Bạn chưa có file nào</span>
-        <button class="mt-5 bg-[#7F56D9] text-white px-7 py-3 rounded-lg">
+        <input
+          type="file"
+          @change="handleFileChange"
+          class="hidden"
+          ref="fileInput"
+        />
+        <button
+          @click="triggerFileInput"
+          class="mt-5 bg-[#7F56D9] text-white px-7 py-3 rounded-lg"
+        >
           Tải file
         </button>
       </div>
@@ -84,11 +108,96 @@
 
 <script>
 import { ref } from "vue";
+import axios from "axios";
 export default {
   name: "HomeView",
   setup() {
     const hasFile = ref(false);
-    return { hasFile };
+    const file = ref(null);
+    const path1 = ref("");
+    const path2 = ref("");
+    const path3 = ref("");
+
+    const triggerFileInput = () => {
+      const fileInput = document.querySelector("input[type='file']");
+      fileInput.click();
+    };
+
+    const handleFileChange = (event) => {
+      const selectedFile = event.target.files[0]; // Lấy file đầu tiên
+      if (selectedFile) {
+        file.value = selectedFile;
+        console.log(path1.value);
+        uploadFile(selectedFile); // Gửi file lên server
+      }
+    };
+    const uploadFile = async (file) => {
+      try {
+        // Tạo FormData và thêm file
+        const formData = new FormData();
+        formData.append("file", file);
+
+        // Gửi yêu cầu POST để upload file
+        const response = await axios.post(
+          "http://127.0.0.1:5000/upload",
+          formData,
+          {
+            headers: {
+              "Content-Type": "multipart/form-data",
+            },
+          }
+        );
+
+        console.log("File đã được gửi thành công:", response);
+
+        // Gắn giá trị path từ response
+        path1.value = response.data.path1;
+        path2.value = response.data.path2;
+        path3.value = response.data.path3;
+        hasFile.value = true; // Đã có file
+
+        // Gửi yêu cầu POST với path1
+        const imageUrl = path1.value;
+        const postResponse = await axios.post(
+          "http://127.0.0.1:3000/upload",
+          {
+            imageUrl: imageUrl,
+          },
+          {
+            headers: {
+              "Content-Type": "application/json",
+            },
+          }
+        );
+        console.log(postResponse);
+
+        console.log("Gửi dữ liệu path1 thành công:", postResponse);
+      } catch (error) {
+        console.error("Đã xảy ra lỗi:", error);
+      }
+    };
+
+    const swapPath = (tmp) => {
+      if (tmp === 2) {
+        const pathTmp = path1.value;
+        path1.value = path2.value;
+        path2.value = pathTmp;
+      } else if (tmp === 3) {
+        const pathTmp = path1.value;
+        path1.value = path3.value;
+        path3.value = pathTmp;
+      }
+    };
+
+    return {
+      hasFile,
+      path1,
+      path2,
+      path3,
+      swapPath,
+      triggerFileInput,
+      handleFileChange,
+    };
   },
 };
 </script>
