@@ -47,16 +47,7 @@
           </div>
           <div class="mt-10">
             <span class="font-bold">3. Recognize character</span>
-            <span class="block mt-2"
-              >SNO040201021680<br />
-              TƯỜNG ĐĂNG VƯƠNG QUỐC <br />
-              09/01/2001 <br />
-              Nam <br />
-              Việt Nam <br />
-              Hưng Tân, Hưng Nguyên, Nghệ An <br />
-              09/01/2026 <br />
-              Khối Quang Trung, Thị trấn Nam Đàn, Nam Đàn, Nghệ An
-            </span>
+            <span class="block mt-2" v-html="ocrText2"> </span>
           </div>
           <div class="mt-10">
             <span class="font-bold">4. Classify document</span>
@@ -64,25 +55,11 @@
           </div>
           <div class="mt-10">
             <span class="font-bold">5. JSON Output </span>
-            <span class="block mt-2"
-              >[ { “type”: “CCCD/CMND 12 số mặt trước” "idNumber":
-              "SNO040201021680", "fullName": "TƯỜNG ĐĂNG VƯƠNG QUỐC",
-              "dateOfBirth": "09/01/2001", "sex": "Nam", "national": "Việt Nam",
-              "placeOfOrigin": "Hưng Tân, Hưng Nguyên, Nghệ An", "dateOfExpiry":
-              "09/01/2026", "placeOfResidence": "Khối Quang Trung, Thị trấn Nam
-              Đàn, Nam Đàn, Nghệ An" } ]
-            </span>
+            <span class="block mt-2" v-html="ocrText"></span>
           </div>
           <div class="mt-10">
             <span class="font-bold">6. Correct character</span>
-            <span class="block mt-2"
-              >[ { “type”: “CCCD/CMND 12 số mặt trước” "idNumber":
-              "SNO040201021680", "fullName": "TƯỜNG ĐĂNG VƯƠNG QUỐC",
-              "dateOfBirth": "09/01/2001", "sex": "Nam", "national": "Việt Nam",
-              "placeOfOrigin": "Hưng Tân, Hưng Nguyên, Nghệ An", "dateOfExpiry":
-              "09/01/2026", "placeOfResidence": "Khối Quang Trung, Thị trấn Nam
-              Đàn, Nam Đàn, Nghệ An" } ]
-            </span>
+            <span class="block mt-2" v-html="ocrText"></span>
           </div>
         </div>
       </div>
@@ -99,6 +76,9 @@
           @click="triggerFileInput"
           class="mt-5 bg-[#7F56D9] text-white px-7 py-3 rounded-lg"
         >
+          <svg class="animate-spin h-5 w-5 mr-3 ..." viewBox="0 0 24 24">
+            <!-- ... -->
+          </svg>
           Tải file
         </button>
       </div>
@@ -117,6 +97,9 @@ export default {
     const path1 = ref("");
     const path2 = ref("");
     const path3 = ref("");
+    const ocrText = ref("");
+    const ocrText2 = ref("");
+    const isSuccess = ref(null);
 
     const triggerFileInput = () => {
       const fileInput = document.querySelector("input[type='file']");
@@ -158,6 +141,18 @@ export default {
 
         // Gửi yêu cầu POST với path1
         const imageUrl = path1.value;
+        const postResponse2 = await axios.post(
+          "http://127.0.0.1:3001/upload",
+          {
+            imageUrl: imageUrl,
+          },
+          {
+            headers: {
+              "Content-Type": "application/json",
+            },
+          }
+        );
+        ocrText2.value = postResponse2.data.ocrText;
         const postResponse = await axios.post(
           "http://127.0.0.1:3000/upload",
           {
@@ -169,7 +164,7 @@ export default {
             },
           }
         );
-        console.log(postResponse);
+        ocrText.value = postResponse.data.ocrText;
 
         console.log("Gửi dữ liệu path1 thành công:", postResponse);
       } catch (error) {
@@ -194,6 +189,9 @@ export default {
       path1,
       path2,
       path3,
+      ocrText,
+      ocrText2,
+      isSuccess,
       swapPath,
       triggerFileInput,
       handleFileChange,
