@@ -1,24 +1,38 @@
 <template>
+  <header-component />
   <div class="home">
     <div class="max-w-[1280px] px-5 xl:px-10 mx-auto py-10">
-      <div v-if="hasFile" class="grid grid-cols-1 lg:grid-cols-2 gap-24">
+      <img
+        v-if="!hasFile"
+        src="../assets/ims.png"
+        alt=""
+        class="absolute top-[350px] xl:top-auto xl:bottom-0 right-1/2 - translate-x-1/2 w-[650px]"
+      />
+      <div
+        v-if="hasFile"
+        class="grid grid-cols-1 lg:grid-cols-2 gap-16 xl:gap-24"
+      >
         <div class="text-center">
           <div class="">
             <div class="font-bold text-[18px]">Ảnh đã xử lý</div>
             <div class="mt-5">
-              <img :src="path1" alt="" class="mx-auto w-[500px]" />
+              <img
+                :src="path1"
+                alt=""
+                class="mx-auto w-[500px] border-4 border-green-600"
+              />
               <div class="mt-8 flex items-center gap-5 justify-center">
                 <img
                   @click="swapPath(2)"
                   :src="path2"
                   alt=""
-                  class="max-w-[80px] border-2 border-black cursor-pointer"
+                  class="max-w-[80px] border-2 border-green-600 cursor-pointer"
                 />
                 <img
                   :src="path3"
                   @click="swapPath(3)"
                   alt=""
-                  class="max-w-[80px]"
+                  class="max-w-[80px] border-2 border-green-600"
                 />
               </div>
             </div>
@@ -30,24 +44,41 @@
             />
             <button
               @click="triggerFileInput"
-              class="mt-8 bg-[#7F56D9] text-white px-7 py-3 rounded-lg"
+              class="mt-5 bg-[#7F56D9] text-white px-7 py-3 rounded-lg flex items-center gap-3 mx-auto"
             >
-              Tải file
+              <img
+                v-if="isSuccess === false"
+                src="../assets/spin.svg"
+                alt=""
+                class="animate-spin"
+              />
+              <span v-if="isSuccess === false">Đang tải</span>
+              <span v-if="isSuccess === null">Tải file</span>
             </button>
           </div>
         </div>
         <div class="">
           <div class="">
             <span class="font-bold">1.Preprocess</span>
-            <span class="block mt-2">Đạt ✅</span>
+            <span class="mt-2 flex gap-2 items-center"
+              >Đạt <img src="../assets/tick.svg" alt="" class="w-6"
+            /></span>
           </div>
           <div class="mt-10">
             <span class="font-bold">2. Detect text</span>
-            <span class="block mt-2">Đã detect ✅</span>
+            <span class="mt-2 flex gap-2 items-center"
+              >Đã detect <img src="../assets/tick.svg" alt="" class="w-6"
+            /></span>
           </div>
           <div class="mt-10">
             <span class="font-bold">3. Recognize character</span>
-            <span class="block mt-2" v-html="ocrText2"> </span>
+            <img
+              v-if="isSuccess1 === false"
+              src="../assets/spin-black.svg"
+              alt=""
+              class="animate-spin mt-2"
+            />
+            <span class="block mt-2" v-html="ocrText2"></span>
           </div>
           <div class="mt-10">
             <span class="font-bold">4. Classify document</span>
@@ -55,15 +86,27 @@
           </div>
           <div class="mt-10">
             <span class="font-bold">5. JSON Output </span>
-            <span class="block mt-2" v-html="ocrText"></span>
+            <img
+              v-if="isSuccess2 === false"
+              src="../assets/spin-black.svg"
+              alt=""
+              class="animate-spin mt-2"
+            />
+            <span class="block mt-2 text-wrap" v-html="ocrText"></span>
           </div>
           <div class="mt-10">
             <span class="font-bold">6. Correct character</span>
-            <span class="block mt-2" v-html="ocrText"></span>
+            <img
+              v-if="isSuccess2 === false"
+              src="../assets/spin-black.svg"
+              alt=""
+              class="animate-spin mt-2"
+            />
+            <span class="block mt-2 text-wrap" v-html="ocrText"></span>
           </div>
         </div>
       </div>
-      <div v-if="!hasFile" class="mx-auto mt-24 text-center">
+      <div v-if="!hasFile" class="mx-auto mt-12 text-center">
         <div class="font-bold text-[20px]">Hệ thống trích xuất dữ liệu OCR</div>
         <span class="block mt-6">Bạn chưa có file nào</span>
         <input
@@ -74,12 +117,16 @@
         />
         <button
           @click="triggerFileInput"
-          class="mt-5 bg-[#7F56D9] text-white px-7 py-3 rounded-lg"
+          class="mt-5 bg-[#7F56D9] text-white px-7 py-3 rounded-lg flex items-center gap-3 mx-auto"
         >
-          <svg class="animate-spin h-5 w-5 mr-3 ..." viewBox="0 0 24 24">
-            <!-- ... -->
-          </svg>
-          Tải file
+          <img
+            v-if="isSuccess === false"
+            src="../assets/spin.svg"
+            alt=""
+            class="animate-spin"
+          />
+          <span v-if="isSuccess === false">Đang tải</span>
+          <span v-if="isSuccess === null">Tải file</span>
         </button>
       </div>
     </div>
@@ -89,8 +136,12 @@
 <script>
 import { ref } from "vue";
 import axios from "axios";
+import HeaderComponent from "@/components/HeaderComponent.vue";
 export default {
   name: "HomeView",
+  components: {
+    HeaderComponent,
+  },
   setup() {
     const hasFile = ref(false);
     const file = ref(null);
@@ -100,6 +151,8 @@ export default {
     const ocrText = ref("");
     const ocrText2 = ref("");
     const isSuccess = ref(null);
+    const isSuccess1 = ref(null);
+    const isSuccess2 = ref(null);
 
     const triggerFileInput = () => {
       const fileInput = document.querySelector("input[type='file']");
@@ -115,8 +168,12 @@ export default {
       }
     };
     const uploadFile = async (file) => {
+      ocrText.value = null;
+      ocrText2.value = null;
+      isSuccess.value = null;
       try {
         // Tạo FormData và thêm file
+        isSuccess.value = false;
         const formData = new FormData();
         formData.append("file", file);
 
@@ -130,6 +187,9 @@ export default {
             },
           }
         );
+        if (response) {
+          isSuccess.value = null;
+        }
 
         console.log("File đã được gửi thành công:", response);
 
@@ -141,32 +201,46 @@ export default {
 
         // Gửi yêu cầu POST với path1
         const imageUrl = path1.value;
-        const postResponse2 = await axios.post(
-          "http://127.0.0.1:3001/upload",
-          {
-            imageUrl: imageUrl,
-          },
-          {
-            headers: {
-              "Content-Type": "application/json",
+        try {
+          isSuccess1.value = false;
+          const postResponse2 = await axios.post(
+            "http://127.0.0.1:3001/upload",
+            {
+              imageUrl: imageUrl,
             },
+            {
+              headers: {
+                "Content-Type": "application/json",
+              },
+            }
+          );
+          if (postResponse2) {
+            ocrText2.value = postResponse2.data.ocrText;
+            isSuccess1.value = null;
           }
-        );
-        ocrText2.value = postResponse2.data.ocrText;
-        const postResponse = await axios.post(
-          "http://127.0.0.1:3000/upload",
-          {
-            imageUrl: imageUrl,
-          },
-          {
-            headers: {
-              "Content-Type": "application/json",
+        } catch (error) {
+          console.log(error);
+        }
+        try {
+          isSuccess2.value = false;
+          const postResponse = await axios.post(
+            "http://127.0.0.1:3000/upload",
+            {
+              imageUrl: imageUrl,
             },
+            {
+              headers: {
+                "Content-Type": "application/json",
+              },
+            }
+          );
+          if (postResponse) {
+            ocrText.value = postResponse.data.ocrText;
+            isSuccess2.value = null;
           }
-        );
-        ocrText.value = postResponse.data.ocrText;
-
-        console.log("Gửi dữ liệu path1 thành công:", postResponse);
+        } catch (error) {
+          console.log(error);
+        }
       } catch (error) {
         console.error("Đã xảy ra lỗi:", error);
       }
@@ -192,6 +266,8 @@ export default {
       ocrText,
       ocrText2,
       isSuccess,
+      isSuccess1,
+      isSuccess2,
       swapPath,
       triggerFileInput,
       handleFileChange,
