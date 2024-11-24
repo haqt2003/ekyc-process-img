@@ -82,7 +82,7 @@
           </div>
           <div class="mt-10">
             <span class="font-bold">4. Classify document</span>
-            <span class="block mt-2">CCCD/CMND 12 số mặt trước</span>
+            <span class="block mt-2">{{ ocrText4 }}</span>
           </div>
           <div class="mt-10">
             <span class="font-bold">5. JSON Output </span>
@@ -95,7 +95,7 @@
             <span class="block mt-2 text-wrap" v-html="ocrText"></span>
           </div>
           <div class="mt-10">
-            <span class="font-bold">6. Correct character</span>
+            <span class="font-bold">6. Correct character & Check Logic</span>
             <img
               v-if="isSuccess2 === false"
               src="../assets/spin-black.svg"
@@ -107,7 +107,9 @@
         </div>
       </div>
       <div v-if="!hasFile" class="mx-auto mt-12 text-center">
-        <div class="font-bold text-[20px]">Hệ thống trích xuất dữ liệu OCR</div>
+        <div class="font-bold text-[20px]">
+          Hệ thống trích xuất, xác thực giấy tờ điện tử
+        </div>
         <span class="block mt-6">Bạn chưa có file nào</span>
         <input
           type="file"
@@ -117,7 +119,7 @@
         />
         <button
           @click="triggerFileInput"
-          class="mt-5 bg-[#7F56D9] text-white px-7 py-3 rounded-lg flex items-center gap-3 mx-auto"
+          class="mt-5 bg-[#4285f4] text-white px-7 py-3 rounded-lg flex items-center gap-3 mx-auto"
         >
           <img
             v-if="isSuccess === false"
@@ -150,9 +152,11 @@ export default {
     const path3 = ref("");
     const ocrText = ref("");
     const ocrText2 = ref("");
+    const ocrText4 = ref("");
     const isSuccess = ref(null);
     const isSuccess1 = ref(null);
     const isSuccess2 = ref(null);
+    const isSuccess3 = ref(null);
 
     const triggerFileInput = () => {
       const fileInput = document.querySelector("input[type='file']");
@@ -204,7 +208,7 @@ export default {
         try {
           isSuccess1.value = false;
           const postResponse2 = await axios.post(
-            "http://127.0.0.1:3001/upload",
+            "http://127.0.0.1:3000/recognizition",
             {
               imageUrl: imageUrl,
             },
@@ -222,11 +226,31 @@ export default {
           console.log(error);
         }
         try {
+          isSuccess3.value = false;
+          const classificationResponse = await axios.post(
+            "http://127.0.0.1:3000/classify-document",
+            {
+              documentText: ocrText2.value, // Truyền kết quả OCR làm đầu vào
+            },
+            {
+              headers: {
+                "Content-Type": "application/json",
+              },
+            }
+          );
+          if (classificationResponse) {
+            ocrText4.value = classificationResponse.data.classificationResult;
+            isSuccess3.value = null;
+          }
+        } catch (error) {
+          console.log(error);
+        }
+        try {
           isSuccess2.value = false;
           const postResponse = await axios.post(
-            "http://127.0.0.1:3000/upload",
+            "http://127.0.0.1:3000/json-output",
             {
-              imageUrl: imageUrl,
+              documentText: ocrText2.value, // Truyền kết quả OCR làm đầu vào
             },
             {
               headers: {
@@ -235,7 +259,7 @@ export default {
             }
           );
           if (postResponse) {
-            ocrText.value = postResponse.data.ocrText;
+            ocrText.value = postResponse.data.formattedOcrText;
             isSuccess2.value = null;
           }
         } catch (error) {
@@ -265,9 +289,11 @@ export default {
       path3,
       ocrText,
       ocrText2,
+      ocrText4,
       isSuccess,
       isSuccess1,
       isSuccess2,
+      isSuccess3,
       swapPath,
       triggerFileInput,
       handleFileChange,
