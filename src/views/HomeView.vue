@@ -16,11 +16,32 @@
           <div class="">
             <div class="font-bold text-[18px]">Ảnh đã xử lý</div>
             <div class="mt-5">
-              <img
-                :src="path1"
-                alt=""
-                class="mx-auto w-[500px] border-4 border-green-600"
-              />
+              <div class="mx-auto relative max-w-[500px] overflow-hidden">
+                <img
+                  :src="path1"
+                  alt=""
+                  class="mx-auto w-[500px] border-4 border-green-600"
+                />
+                <div
+                  class="text-center absolute w-full h-full top-0 left-0 text-black opacity-25 font-semibold"
+                >
+                  <div class="flex gap-4 mt-4">
+                    <span class="rotate-45 block">{{ email }}</span>
+                    <span class="rotate-45 block">{{ email }}</span
+                    ><span class="rotate-45 block">{{ email }}</span>
+                  </div>
+                  <div class="flex gap-4 mt-24 ml-10">
+                    <span class="rotate-45 block">{{ email }}</span>
+                    <span class="rotate-45 block">{{ email }}</span>
+                    <span class="rotate-45 block">{{ email }}</span>
+                  </div>
+                  <div class="flex gap-4 mt-20">
+                    <span class="rotate-45 block">{{ email }}</span>
+                    <span class="rotate-45 block">{{ email }}</span>
+                    <span class="rotate-45 block">{{ email }}</span>
+                  </div>
+                </div>
+              </div>
               <div class="mt-8 flex items-center gap-5 justify-center">
                 <img
                   @click="swapPath(2)"
@@ -143,6 +164,7 @@ export default {
     HeaderComponent,
   },
   setup() {
+    const email = ref(localStorage.getItem("email-kyc"));
     const hasFile = ref(false);
     const file = ref(null);
     const path1 = ref("");
@@ -271,6 +293,7 @@ export default {
       swapPath,
       triggerFileInput,
       handleFileChange,
+      email,
     };
   },
 };
